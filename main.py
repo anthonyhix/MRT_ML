@@ -41,17 +41,22 @@ data_y = normalize(data_y)
 
 # create sequential model
 model = keras.Sequential()
-model.add(layers.Dense(526, activation='relu'))
+model.add(layers.Input(shape=(data_x.shape[1],)))
+model.add(layers.Dense(526, activation='linear'))
 model.add(layers.Dense(128, activation='swish'))
 model.add(layers.Dense(64, activation='relu'))
 model.add(layers.Dense(16, activation='swish'))
 model.add(layers.Dense(1, activation='relu'))
 
-predictions = model(normalize(data_x))
+predictions = model(data_x)
 
-loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+loss_fn = keras.losses.MeanSquaredError()
 loss_fn(data_y, predictions).numpy()
 
 model.compile(optimizer='adam', loss = loss_fn, metrics=['accuracy'])
 
-model.fit(data_x, data_y, epochs=10)
+history = model.fit(data_x, data_y, epochs=10)
+
+model.summary()
+
+print(history.history)
