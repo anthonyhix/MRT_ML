@@ -6,4 +6,4 @@ def preprocess_wav(y, freq_min = 0, freq_max = 10000):
     # Process the wav file with an FFT
     freq_max = np.min([freq_max, y[1]])
     out = np.fft.fft(y[0])
-    return out[freq_min:freq_max]
+    return out[freq_min:freq_max].real
