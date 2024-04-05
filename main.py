@@ -19,7 +19,7 @@ scores_csv = np.loadtxt('training_data/scores.csv', delimiter=',', dtype = 'S')
 scores_len = scores_csv.shape[0]
 path = []
 scores = []
-for i in range(scores_len - 1):
+for i in range(scores_len):
     path = np.append(path, str(scores_csv[i][0].decode()))
     scores = np.append(scores, float(scores_csv[i][1]))
 
@@ -31,7 +31,7 @@ data_x = [pp.preprocess_wav(librosa.load('training_data/' + path[0]))]
 data_y = [[scores[0]]]
 labels = [False, True]
 
-for j in range(1, scores_len - 1):
+for j in range(1, scores_len):
     data_x = np.append(data_x, [pp.preprocess_wav(librosa.load('training_data/' + path[j]))], axis = 0)
     data_y = np.append(data_y, [[scores[j]]], axis = 0)
 
@@ -52,6 +52,11 @@ loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 model.compile(optimizer='adam', loss = loss_fn, metrics=['accuracy'])
 
 history = model.fit(data_x, data_y, epochs=10)
+
+test_loss, test_acc = model.evaluate(data_x, data_y, verbose=2)
+
+print('\nTest accuracy:', test_acc)
+print('\nTest loss:', test_loss)
 
 model.summary()
 
