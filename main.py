@@ -29,15 +29,14 @@ for i in range(scores_len - 1):
 
 data_x = [pp.preprocess_wav(librosa.load('training_data/' + path[0]))]
 data_y = [[scores[0]]]
+labels = [False, True]
 
 for j in range(1, scores_len - 1):
     data_x = np.append(data_x, [pp.preprocess_wav(librosa.load('training_data/' + path[j]))], axis = 0)
     data_y = np.append(data_y, [[scores[j]]], axis = 0)
 
-# Normalize the data
+# Normalize the input data
 data_x = normalize(data_x)
-data_y = normalize(data_y)
-
 
 # create sequential model
 model = keras.Sequential()
@@ -46,12 +45,9 @@ model.add(layers.Dense(526, activation='linear'))
 model.add(layers.Dense(128, activation='swish'))
 model.add(layers.Dense(64, activation='relu'))
 model.add(layers.Dense(16, activation='swish'))
-model.add(layers.Dense(1, activation='relu'))
+model.add(layers.Dense(2))
 
-predictions = model(data_x)
-
-loss_fn = keras.losses.MeanSquaredError()
-loss_fn(data_y, predictions).numpy()
+loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
 model.compile(optimizer='adam', loss = loss_fn, metrics=['accuracy'])
 
