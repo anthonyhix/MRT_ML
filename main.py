@@ -29,7 +29,7 @@ for i in range(scores_len):
 
 data_x = [pp.preprocess_wav(librosa.load('training_data/' + path[0]))]
 data_y = [[scores[0]]]
-labels = [False, True]
+labels = [0, 1]
 
 for j in range(1, scores_len):
     data_x = np.append(data_x, [pp.preprocess_wav(librosa.load('training_data/' + path[j]))], axis = 0)
@@ -55,9 +55,9 @@ history = model.fit(data_x, data_y, epochs=10)
 
 test_loss, test_acc = model.evaluate(data_x, data_y, verbose=2)
 
-print('\nTest accuracy:', test_acc)
-print('\nTest loss:', test_loss)
-
 model.summary()
 
 print(history.history)
+
+print('\nReal Results:', data_y)
+print(model.predict(data_x))
