@@ -6,11 +6,14 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 import librosa
+import pandas as pd
 import preprocessor as pp
 
 #normalize with min/max
 def normalize(data):
-    return (data - np.min(data)) / (np.max(data) - np.min(data))
+    for i in range(data.shape[0]):
+        data[:, i] = (data[:, i] - np.min(data[:, i])) / (np.max(data[:, i]) - np.min(data[:, i]))
+    return data
 
 # Load the training data from training_data folder
 scores_csv = np.loadtxt('training_data/scores.csv', delimiter=',', dtype = 'S')
@@ -19,7 +22,8 @@ scores_csv = np.loadtxt('training_data/scores.csv', delimiter=',', dtype = 'S')
 scores_len = scores_csv.shape[0]
 path = []
 scores = []
-for i in range(scores_len):
+batch_size = 1000
+for i in range(np.min([scores_len, batch_size])):
     path = np.append(path, str(scores_csv[i][0].decode()))
     scores = np.append(scores, float(scores_csv[i][1]))
 
@@ -27,13 +31,20 @@ for i in range(scores_len):
 # data_x is a 2D array where each row is the input and output wav files concatenated in the frequency domain
 # data_y is a 1D array where each element is the score of the corresponding row in data_x
 
+indices = np.arange(batch_size)
+np.random.shuffle(indices)
+
+path = path[indices]
+scores = scores[indices]
+
 data_x = [pp.preprocess_wav(librosa.load('training_data/' + path[0]))]
 data_y = [[scores[0]]]
 labels = [0, 1]
 
-for j in range(1, scores_len):
+for j in range(1, np.min([scores_len, batch_size])):
     data_x = np.append(data_x, [pp.preprocess_wav(librosa.load('training_data/' + path[j]), end_offset = 1)], axis = 0)
     data_y = np.append(data_y, [[scores[j]]], axis = 0)
+    print('\nPreprocessed ' + str(j) + ' of ' + str(np.min([scores_len, batch_size])))
 
 # Normalize the input data
 data_x = normalize(data_x)
@@ -57,11 +68,18 @@ history = model.fit(data_x, data_y, epochs=40)
 test_loss, test_acc = model.evaluate(data_x, data_y, verbose=1)
 
 print('\nTest accuracy:', test_acc)
+print('\nPercent of 0:', np.sum(data_y == 0) / len(data_y) * 100)
+print('\nPercent of 1:', np.sum(data_y == 1) / len(data_y) * 100)
 
 model.summary()
 
-print(history.history)
-
-print('\nReal Results:', data_y)
+# predict
 model.add(layers.Softmax())
-print('\nEstimated Results:', model.predict(data_x))
+
+output = np.argmax(model.predict(data_x))
+
+df = pd.DataFrame({'Actual': data_y, 'Predicted': output})
+
+df.to_csv('output.csv')
+
+print(history.history)
