@@ -23,5 +23,5 @@ def preprocess_wav(y, freq_min = 1000, freq_max = 7000, sample_time = float('inf
     y = y[sample_min:sample_max]
     f, t, Zxx = sp.signal.stft(y)
     print('Data Loaded')
-    return np.abs(Zxx.flatten().real)
+    return Zxx.real
     

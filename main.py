@@ -31,23 +31,20 @@ freq_max = 7000
 
 # Preprocess wav files
 # Preprocess wav files
-data_x = []
 data_y = []
 group_size = 1
 wav_file = librosa.load('training_data/' + path[0])
-preprocessed_wav = pp.preprocess_wav(wav_file, sample_time = 0.5, group_size = group_size)
-data_x.append(preprocessed_wav)
-data_y.append(scores[0])
+data_x = pp.preprocess_wav(wav_file, sample_time = 0.5, group_size = group_size)[:, :, np.newaxis]
+data_y.append(scores[indices[0]])
 for i in range(1, scores_len):
     wav_file = librosa.load('training_data/' + path[i])
     preprocessed_wav = pp.preprocess_wav(wav_file, sample_time = 0.5, group_size = group_size)
-    if len(preprocessed_wav) != len(data_x[0]):
-        print('Error: Incorrect length of preprocessed wav file')
-        continue
-    data_x.append(preprocessed_wav)
+    # if len(preprocessed_wav) != len(data_x[0]):
+    #     print('Error: Incorrect length of preprocessed wav file')
+    #     continue
+    data_x = np.concatenate((data_x, preprocessed_wav[:, :, np.newaxis]), axis = 2)
     # Get the score for the wav file
     data_y.append(scores[i])
-data_x = np.stack(data_x)
 data_y = np.stack(data_y)
 
 # Plot the first row of data_x for reference
